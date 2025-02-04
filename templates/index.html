@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="ar">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🔬 نظام تشخيص طبي ذكي</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+</head>
+<body>
+    <h1>🔬 نظام تشخيص طبي ذكي</h1>
+    <img src="{{ url_for('static', filename='images/images.jpg') }}" alt="Medical Image" style="width:100%;">
+
+    <form method="POST">
+        <label for="input_text">أدخل الأعراض:</label>
+        <input type="text" id="input_text" name="input_text">
+        <button type="submit" name="action" value="diagnose">تشخيص</button>
+        <button type="submit" name="action" value="visualize">📊عرض الشبكة</button>
+    </form>
+
+    <!-- زر للتعرف على الصوت -->
+    <button id="recordButton">🎤 تحدث الآن</button>
+    <p id="status"></p>
+
+    <form method="POST">
+        <label for="reverse_search">🔍 أدخل اسم المرض للبحث عن أعراضه:</label>
+        <input type="text" id="reverse_search" name="reverse_search">
+        <button type="submit" name="action" value="reverse_search">🔄 البحث العكسي</button>
+    </form>
+
+    {% if disease %}
+    <h2>🦠 المرض المحتمل: {{ disease }}</h2>
+    <p>📖 الوصف: {{ details.get('الوصف', '') }}</p>
+    <p>💊 العلاج: {{ ', '.join(details.get('العلاج', [])) }}</p>
+    {% endif %}
+
+    {% if graph_html %}
+    <h2>📊 الشبكة الدلالية</h2>
+    <div>{{ graph_html|safe }}</div>
+    {% endif %}
+
+    {% if reverse_search %}
+    <h2>✅ الأعراض المرتبطة بـ {{ reverse_search }}:</h2>
+    <p>📝 الأعراض: {{ ', '.join(symptoms) }}</p>
+    {% endif %}
+
+    {% if warning %}
+    <p style="color: red;">{{ warning }}</p>
+    {% endif %}
+
+    {% if error %}
+    <p style="color: red;">{{ error }}</p>
+    {% endif %}
+
+    <!-- إضافة JavaScript للتعرف على الصوت -->
+    <script>
+        const recordButton = document.getElementById('recordButton');
+const status = document.getElementById('status');
+const inputText = document.getElementById('input_text');
+
+let isRecording = false;
+let mediaRecorder;
+let audioChunks = [];
+
+if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+    status.textContent = "⚠️ المتصفح لا يدعم التعرف على الصوت.";
+    recordButton.disabled = true;
+}
+
+recordButton.addEventListener('click', async () => {
+    if (!isRecording) {
+        try {
+            const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+            mediaRecorder = new MediaRecorder(stream, { mimeType: 'audio/webm' });
+            mediaRecorder.start();
+            isRecording = true;
+            recordButton.textContent = "⏹️ أوقف التسجيل";
+            status.textContent = "🎤 جاري التسجيل...";
+
+            mediaRecorder.ondataavailable = (event) => {
+                audioChunks.push(event.data);
+            };
+
+            mediaRecorder.onstop = async () => {
+                const audioBlob = new Blob(audioChunks, { type: 'audio/webm' });
+                const formData = new FormData();
+                formData.append('audio', audioBlob);
+
+                const response = await fetch('/recognize_speech', {
+                    method: 'POST',
+                    body: formData,
+                });
+
+                if (response.ok) {
+                    const result = await response.json();
+                    inputText.value = result.text;
+                    status.textContent = "✅ تم التعرف على النص: " + result.text;
+                } else {
+                    status.textContent = "❌ فشل التعرف على الصوت.";
+                }
+
+                audioChunks = [];
+                isRecording = false;
+                recordButton.textContent = "🎤 تحدث الآن";
+            };
+        } catch (error) {
+            status.textContent = "❌ خطأ في الوصول إلى الميكروفون.";
+            console.error(error);
+        }
+    } else {
+        mediaRecorder.stop();
+    }
+});
+    </script>
+</body>
+</html>
