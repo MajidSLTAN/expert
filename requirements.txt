@@ -10,6 +10,5 @@ pocketsphinx==5.0.4
 sounddevice
 scikit-learn
 gdown
-base64
 mpld3
 flask
