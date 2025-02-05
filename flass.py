@@ -14,13 +14,11 @@ from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.metrics.pairwise import cosine_similarity
 import gdown
 import io
-import base64
-import mpld3
-from mpld3 import plugins
+
 app = Flask(__name__)
 
 # تحميل خط يدعم العربية
-arabic_font = fm.FontProperties(fname="static/fonts/arial.ttf")
+# arabic_font = fm.FontProperties(fname="static/fonts/arial.ttf")
 
 
 def reshape_arabic_text(text):
