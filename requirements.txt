@@ -1,14 +1,1 @@
-arabic-reshaper==2.1.4
-python-bidi==0.4.2
-networkx==3.2.1
-matplotlib==3.8.0
-matomo-api==1.0b5
-SpeechRecognition==3.13.0
-Pillow==10.1.0
-regex==2024.11.6
-pocketsphinx==5.0.4
-sounddevice
-scikit-learn
-gdown
-mpld3
-flask
+
